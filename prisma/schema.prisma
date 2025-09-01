@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  name                  String?
+  email                 String?                @unique
+  emailVerified         DateTime?
+  image                 String?
+  password              String?
+  accounts              Account[]
+  isTwoFactorEnabled    Boolean                @default(false)
+  twoFactorConfirmation TwoFactorConfirmation?
+  createdAt             DateTime               @default(now())
+  // Chainsaw              Chainsaw[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorConfirmation {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+}
+
+model EquipmentVerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model Equipment {
+  id                       String  @id @default(cuid())
+  ownerFirstName           String //Owner's First Name
+  ownerMiddleName          String //Owner's Middle Initial
+  ownerLastName            String //Owner's Last Name
+  ownerAddress             String //Owner's Address
+  ownerContactNumber       String //Owner's Contact Number
+  ownerEmail               String //Owner's Email
+  ownerPreferContactMethod String //Owner's Preferred Contact Method
+  ownerIdUrl               String? //Owner's ID URL
+
+  // Chainsaw Information
+  brand             String // Chainsaw Brand
+  model             String // Chainsaw Model
+  serialNumber      String   @unique // Chainsaw Serial Number
+  guidBarLength     Float? // Guide Bar Length in inches (optional)
+  horsePower        Float? // Horse Power (optional)
+  fuelType          FuelType // Fuel type (Gas, Diesel, Electric, Other)
+  dateAcquired      DateTime // Date of Acquisition
+  stencilOfSerialNo String // Stencil of Serial Number
+  otherInfo         String // Other Info of the Chainsaw
+  intendedUse       UseType // Intended use of chainsaw
+  isNew             Boolean // New Chainsaw or renewal of registration
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Document Requirements
+  registrationApplicationUrl    String? // Signed Chainsaw Registration Application
+  officialReceiptUrl            String? // Official Receipt of the Chainsaw
+  spaUrl                        String? // SPA (if the applicant is not the owner of the chainsaw)
+  stencilSerialNumberPictureUrl String? // Stencil Serial Number of Chainsaw (Picture)
+  chainsawPictureUrl            String? // Picture of the Chainsaw
+
+  // Renewal Registration Requirements
+  previousCertificateOfRegistrationNumber     String? // Previous Certificate of Registration Number (optional)
+  renewalRegistrationApplicationUrl           String? // Signed Chainsaw Registration Application for renewal (optional)
+  renewalPreviousCertificateOfRegistrationUrl String? // Renewal Previous Certificate of Registration (optional)
+
+  // Additional Requirements
+  forestTenureAgreementUrl     String? // Forest Tenure Agreement (if Tenural Instrument Holder)
+  businessPermitUrl            String? // Business Permit (If Business owner)
+  certificateOfRegistrationUrl String? // For Private Tree Plantation Owner - Certificate of Registration
+  lguBusinessPermitUrl         String? // Business Permit from LGU or affidavit
+  woodProcessingPermitUrl      String? // For Wood Processor - Wood processing plant permit
+  governmentCertificationUrl   String? // For government and GOCC - Certification from the Head of Office
+
+  // Data Privacy Consent
+  dataPrivacyConsent Boolean @default(false)
+
+  // Email Verification
+  emailVerified Boolean @default(false)
+
+  // Application Status and Processing
+  initialApplicationStatus  ApplicationStatus? // Initial Application Status (Accepted/Rejected)
+  initialApplicationRemarks String? // Initial Application Remarks
+  inspectionResult          InspectionResult? // Inspection Result (Passed/Failed)
+  inspectionRemarks         String? // Inspection Remarks
+  orNumber                  String? // OR Number
+  orDate                    DateTime? // OR Date
+  expiryDate                DateTime? // Expiry Date
+}
+
+enum FuelType {
+  GAS
+  DIESEL
+  ELECTRIC
+  OTHER
+}
+
+enum UseType {
+  WOOD_PROCESSING
+  TREE_CUTTING_PRIVATE_PLANTATION
+  GOVT_LEGAL_PURPOSES
+  OFFICIAL_TREE_CUTTING_BARANGAY
+  OTHER
+}
+
+enum ApplicationStatus {
+  ACCEPTED
+  REJECTED
+  PENDING
+}
+
+enum InspectionResult {
+  PASSED
+  FAILED
+  PENDING
+}

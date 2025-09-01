@@ -1,0 +1,4 @@
+Nubula as BG : #DDE5E1
+Salem as Primary: #08933D
+Arapawa as Secondary: #0C1B72 
+Gumbo as Accent: #7FA8A7
